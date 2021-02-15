@@ -1,9 +1,10 @@
 import { stock } from './stock';
+import { transactions } from './transactions';
 
-export const app = (sku: string) => new Promise((resolve, reject) => {
-  if (!stock.map(({ sku }) => sku).includes(sku)) reject('This sku does not exist');
+export const app = (sku: string): Promise<{ sku: string, qty: number }> => new Promise((resolve, reject) => {
+  if (!transactions.map(({ sku }) => sku).includes(sku)) reject('This sku does not exist');
 
-  const stockItem = stock.find(({ sku }) => sku === sku);
+  const qty = stock.map(({ sku }) => sku).includes(sku) ? transactions.find(({ sku }) => sku === sku).qty : 0;
 
-  return resolve(stockItem);
+  return resolve({ sku, qty });
 });

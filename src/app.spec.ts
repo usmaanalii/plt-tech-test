@@ -1,18 +1,18 @@
-const mockedFirstStockItemSku = 'some mocked first stock item sku';
-const mockedFirstStockItemStock = 'some mocked first stock item stock';
+const mockedInStockSku = 'some mocked in stock sku';
+const mockedOutOfStockSku = 'some mocked out of stock sku'
+const mockedIncorrectSku = 'some mocked incorrect sku';
 
-const mockFirstStockItem = {
-  sku: mockedFirstStockItemSku,
-  stock: mockedFirstStockItemStock
-};
+const mockedStockItemSku = mockedInStockSku;
+const mockFirstStockItem = { sku: mockedStockItemSku };
+const mockedStock = [ mockFirstStockItem ];
 
-const mockedStock = [
-  mockFirstStockItem
-];
-
-const mockedFirstTransactionItemSku = 'some mocked first transaction item sku';
+const mockedFirstTransactionItemSku = mockedInStockSku;
 const mockedFirstTransactionItemType = 'some mocked first transaction item type';
 const mockedFirstTransactionItemQty = 'some mocked first transaction item quantity';
+
+const mockedSecondTransactionItemSku = mockedOutOfStockSku;
+const mockedSecondTransactionItemType = 'some mocked second transaction item type';
+const mockedSecondTransactionItemQty = 'some mocked second transaction item quantity';
 
 const mockedFirstTransaction = {
   sku: mockedFirstTransactionItemSku,
@@ -20,11 +20,16 @@ const mockedFirstTransaction = {
   qty: mockedFirstTransactionItemQty
 };
 
-const mockedTransactions = [
-  mockedFirstTransaction
-];
+const mockedSecondTransaction = {
+  sku: mockedSecondTransactionItemSku,
+  type: mockedSecondTransactionItemType,
+  qty: mockedSecondTransactionItemQty
+};
 
-const mockedIncorrectSku = 'some mocked incorrect sku';
+const mockedTransactions = [
+  mockedFirstTransaction,
+  mockedSecondTransaction
+];
 
 const expectedError = 'This sku does not exist';
 
@@ -35,15 +40,15 @@ describe('Given the app', () => {
     jest.doMock('./stock', () => ({
       stock: mockedStock
     }));
+
+    jest.doMock('./transactions', () => ({
+      transactions: mockedTransactions
+    }));
   });
 
   describe('When imported as a node module', () => {
     beforeEach(() => {
       ({ app } = require('./app'));
-    });
-
-    it('Then should be a function', () => {
-      expect(app).toBeInstanceOf(Function);
     });
 
     describe('And when calling app with an sku that does NOT exist', () => {
@@ -56,16 +61,34 @@ describe('Given the app', () => {
       });
     });
 
-    describe('And when calling app with an sku that does exist', () => {
+    describe('And when calling app with an sku that does exist but is NOT in stock', () => {
       let actualResponse;
 
-      const expectedResponse = mockFirstStockItem;
+      const expectedResponse = {
+        sku: mockedOutOfStockSku,
+        qty: 0
+      };
 
-      beforeEach(() => app(mockedFirstStockItemSku).then(response => actualResponse = response));
+      beforeEach(() => app(mockedOutOfStockSku).then(response => actualResponse = response));
 
       it('Then should return the expected response', () => {
-        expect(actualResponse).toBe(expectedResponse)
-      });
+          expect(actualResponse).toEqual(expectedResponse)
+        });
+    });
+
+    describe('And when calling app with an sku that does exist in stock', () => {
+      let actualResponse;
+
+      const expectedResponse = {
+        sku: mockedInStockSku,
+        qty: mockedFirstTransaction.qty
+      };
+
+      beforeEach(() => app(mockedInStockSku).then(response => actualResponse = response));
+
+      it('Then should return the expected response', () => {
+          expect(actualResponse).toEqual(expectedResponse)
+        });
     });
   });
 
